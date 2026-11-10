@@ -1,1 +1,1273 @@
+<!doctype html>
+<html lang="ru">
 
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Учёт рабочего времени</title>
+  <style>
+    :root {
+      font-family: system-ui, Arial, sans-serif;
+      background: #f3f6fb;
+      color: #15243b
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0
+    }
+
+    main {
+      max-width: 1100px;
+      margin: auto;
+      padding: 25px 16px
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 16px
+    }
+
+    h3 {
+      margin: 0 0 10px
+    }
+
+    .muted {
+      color: #64748b
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #dfe6ef;
+      border-radius: 14px;
+      padding: 22px;
+      margin: 18px 0;
+      box-shadow: 0 3px 14px #10253c08
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px
+    }
+
+    .fields label {
+      display: grid;
+      gap: 5px;
+      font-size: 13px;
+      color: #64748b
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      min-width: 0
+    }
+
+    input {
+      width: 100%
+    }
+
+    button {
+      background: #2457ce;
+      border: 0;
+      color: #fff;
+      cursor: pointer
+    }
+
+    button:hover {
+      filter: brightness(.94)
+    }
+
+    button:disabled {
+      opacity: .55
+    }
+
+    button.danger {
+      background: #b42332
+    }
+
+    button.secondary {
+      background: #edf2fa;
+      color: #21416b;
+      margin: 5px;
+    }
+
+    .person {
+      border-top: 1px solid #e2e8f0;
+      padding: 18px 0
+    }
+
+    .person:first-child {
+      border: 0
+    }
+
+    .status {
+      font-size: 13px
+    }
+
+    .running {
+      color: #087b54
+    }
+
+    .clock {
+      font-size: 28px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      margin: 9px 0
+    }
+
+    .report-person {
+      margin-top: 20px
+    }
+
+    .scroll {
+      overflow-x: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th,
+    td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0
+    }
+
+    th {
+      font-size: 13px;
+      color: #64748b
+    }
+
+    .message {
+      min-height: 25px;
+      color: #087b54
+    }
+
+    .error {
+      color: #b42332
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #64748b
+    }
+
+    .actions {
+      margin-top: 12px;
+      gap: 10px
+    }
+
+    .datebox {
+      display: flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    #lang {
+      width: 185px
+    }
+
+    @media(max-width:700px) {
+      .fields {
+        grid-template-columns: 1fr
+      }
+
+      .panel {
+        padding: 15px
+      }
+
+      h1 {
+        font-size: 24px
+      }
+
+      .row>button {
+        flex-grow: 1
+      }
+    }
+
+    /* Centered accessible confirmation dialog */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(15, 23, 42, .58);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      animation: fadeIn .16s ease
+    }
+
+    .modal-overlay[hidden] {
+      display: none
+    }
+
+    .modal-card {
+      position: relative;
+      width: min(100%, 470px);
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 28px 80px #0f172a55;
+      text-align: center;
+      animation: popIn .18s ease
+    }
+
+    .modal-symbol {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 15px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 32px
+    }
+
+    .modal-card h2 {
+      margin: 0 0 12px;
+      font-size: 23px
+    }
+
+    .modal-card p {
+      line-height: 1.55;
+      overflow-wrap: anywhere
+    }
+
+    .modal-warning {
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: left;
+      color: #9f1239;
+      font-size: 14px
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      font-weight: 650;
+      padding: 12px
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 15px;
+      top: 12px;
+      background: transparent;
+      color: #475569;
+      font-size: 23px;
+      padding: 3px 9px
+    }
+
+    .modal-close:hover {
+      background: #f1f5f9
+    }
+
+    .modal-card button:focus-visible {
+      outline: 3px solid #93c5fd;
+      outline-offset: 3px
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    @keyframes popIn {
+      from {
+        transform: translateY(12px) scale(.97);
+        opacity: .5
+      }
+
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      .modal-overlay,
+      .modal-card {
+        animation: none
+      }
+    }
+
+    @media(max-width:480px) {
+      .modal-card {
+        padding: 22px 18px
+      }
+
+      .modal-buttons {
+        flex-direction: column-reverse
+      }
+    }
+
+    /* Work Time Tracker 3.0 — Dark Professional */
+    :root {
+      color-scheme: dark;
+      --bg: #0b1220;
+      --surface: #141f31;
+      --surface2: #1c2a40;
+      --line: #2b3b52;
+      --text: #ecf3ff;
+      --sub: #9aabc3;
+      --accent: #4e8bff;
+      --positive: #39d9a0;
+      --negative: #ff6478;
+      --shadow: 0 16px 36px #02091545;
+      font-family: Inter, system-ui, Segoe UI, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f3f6fc;
+      --surface: #fff;
+      --surface2: #edf3fb;
+      --line: #dbe4f0;
+      --text: #14233a;
+      --sub: #667991;
+      --accent: #275ed5;
+      --positive: #07855d;
+      --negative: #bf2f43;
+      --shadow: 0 12px 30px #182a4610
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    main {
+      max-width: 1450px;
+      margin: auto;
+      padding: 30px 30px 50px 282px;
+      min-height: 100vh
+    }
+
+    .top {
+      margin-bottom: 6px
+    }
+
+    h1 {
+      font-size: 29px;
+      letter-spacing: -.7px
+    }
+
+    h2 {
+      font-size: 18px
+    }
+
+    h3 {
+      font-size: 16px
+    }
+
+    .muted,
+    .hint,
+    .fields label,
+    th {
+      color: var(--sub)
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin: 18px 0
+    }
+
+    .person {
+      border-color: var(--line)
+    }
+
+    .person h3 {
+      font-size: 17px
+    }
+
+    input,
+    select {
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      color: var(--text)
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border-radius: 9px;
+      font-weight: 600;
+      transition: transform .15s, filter .15s
+    }
+
+    button:hover {
+      transform: translateY(-1px)
+    }
+
+    button.secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--line)
+    }
+
+    button.danger {
+      background: #bd344b
+    }
+
+    .running {
+      color: var(--positive)
+    }
+
+    .message {
+      color: var(--positive)
+    }
+
+    .error {
+      color: var(--negative)
+    }
+
+    td,
+    th {
+      border-color: var(--line)
+    }
+
+    .modal-card {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--line)
+    }
+
+    .modal-close {
+      color: var(--sub)
+    }
+
+    .modal-close:hover {
+      background: var(--surface2)
+    }
+
+    .modal-warning {
+      background: #5e1f3029;
+      border-color: #d44b6659;
+      color: var(--negative)
+    }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 250px;
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      padding: 28px 17px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      z-index: 5
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 6px 9px;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -.4px
+    }
+
+    .brand-icon {
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #4385ff, #6558dc);
+      color: white;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      font-size: 21px
+    }
+
+    .nav {
+      display: grid;
+      gap: 7px
+    }
+
+    .nav a {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: var(--sub);
+      text-decoration: none;
+      border-radius: 11px;
+      padding: 13px;
+      font-weight: 650;
+      font-size: 14px
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      color: var(--text);
+      background: var(--surface2)
+    }
+
+    .nav a.active {
+      box-shadow: inset 3px 0 var(--accent)
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      color: var(--sub);
+      font-size: 12px;
+      padding: 10px
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 9px;
+      align-items: center
+    }
+
+    .theme-toggle {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      white-space: nowrap
+    }
+
+    .section-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 1.6px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      margin: 0 0 6px
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 24px 0 18px
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 19px;
+      min-width: 0
+    }
+
+    .summary-label {
+      color: var(--sub);
+      font-size: 13px
+    }
+
+    .summary-number {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -.7px;
+      margin-top: 9px;
+      font-variant-numeric: tabular-nums
+    }
+
+    .summary-icon {
+      font-size: 20px;
+      float: right
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 16px
+    }
+
+    .analytics-grid .panel {
+      margin: 0
+    }
+
+    .chart {
+      height: 210px;
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      padding: 24px 8px 2px;
+      border-bottom: 1px solid var(--line)
+    }
+
+    .chart-col {
+      height: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+      align-items: center;
+      gap: 7px;
+      min-width: 0
+    }
+
+    .chart-bar {
+      width: min(100%, 38px);
+      min-height: 3px;
+      border-radius: 6px 6px 0 0;
+      background: linear-gradient(0deg, #3562c7, #65a5ff)
+    }
+
+    .chart-day {
+      font-size: 11px;
+      color: var(--sub);
+      white-space: nowrap
+    }
+
+    .chart-val {
+      font-size: 10px;
+      color: var(--sub)
+    }
+
+    .employee-bars {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px
+    }
+
+    .employee-bar-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      margin-bottom: 7px
+    }
+
+    .employee-track {
+      height: 9px;
+      background: var(--surface2);
+      border-radius: 20px;
+      overflow: hidden
+    }
+
+    .employee-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #3983ff, #49d4d2)
+    }
+
+    .clock {
+      font-size: 34px;
+      color: var(--positive)
+    }
+
+    .person {
+      padding: 20px 0
+    }
+
+    .person p {
+      color: var(--sub)
+    }
+
+    .section-anchor {
+      scroll-margin-top: 20px
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px
+    }
+
+    .dashboard-header h2 {
+      margin: 0
+    }
+
+    .chart-empty {
+      align-self: center;
+      text-align: center;
+      color: var(--sub);
+      width: 100%;
+      font-size: 13px
+    }
+
+    .report-person {
+      margin-top: 24px
+    }
+
+    #message {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      padding: 8px 0
+    }
+
+    #employeeFields {
+      grid-template-columns: 1fr;
+      max-width: 550px
+    }
+
+    #lang {
+      width: 145px
+    }
+
+    @media(max-width:1150px) {
+      main {
+        padding-left: 245px;
+        padding-right: 20px
+      }
+
+      .sidebar {
+        width: 220px
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+      }
+
+      .analytics-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width:760px) {
+      .sidebar {
+        position: static;
+        width: auto;
+        flex-direction: row;
+        align-items: center;
+        padding: 12px;
+        gap: 12px;
+        overflow: auto
+      }
+
+      .brand {
+        white-space: nowrap
+      }
+
+      .nav {
+        display: flex;
+        gap: 4px
+      }
+
+      .nav a {
+        white-space: nowrap;
+        padding: 10px
+      }
+
+      .sidebar-foot {
+        display: none
+      }
+
+      main {
+        padding: 18px 14px 35px
+      }
+
+      .summary-grid {
+        gap: 9px;
+        margin-top: 16px
+      }
+
+      .summary-card {
+        padding: 14px
+      }
+
+      .summary-number {
+        font-size: 23px
+      }
+
+      .top {
+        align-items: flex-start
+      }
+
+      .toolbar {
+        width: 100%;
+        justify-content: flex-end
+      }
+
+      .panel {
+        padding: 16px
+      }
+
+      .chart {
+        gap: 5px
+      }
+
+      .chart-day {
+        font-size: 10px
+      }
+    }
+
+    @media(max-width:440px) {
+      .brand {
+        font-size: 0
+      }
+
+      .nav a {
+        font-size: 12px;
+        gap: 5px;
+        padding: 8px
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+      }
+
+      .top h1 {
+        font-size: 23px
+      }
+
+      .toolbar {
+        flex-wrap: wrap
+      }
+    }
+
+    /* WorkTime 3.1 — Warm Sand SPA: soft cream / warm coffee themes */
+    :root {
+      color-scheme: light;
+      --bg: #f7f2ea;
+      --surface: #fffdf9;
+      --surface2: #f1e8dc;
+      --line: #e3d5c5;
+      --text: #40352f;
+      --sub: #76695e;
+      --accent: #9a6549;
+      --positive: #367d68;
+      --negative: #b34747;
+      --shadow: 0 10px 28px rgba(89, 64, 43, .09);
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #302b2a;
+      --surface: #403936;
+      --surface2: #514740;
+      --line: #685950;
+      --text: #fff5e9;
+      --sub: #dcc7b6;
+      --accent: #e2b58d;
+      --positive: #9ad9b9;
+      --negative: #ffaaa2;
+      --shadow: 0 12px 30px rgba(22, 16, 12, .22)
+    }
+
+    body {
+      background: var(--bg)
+    }
+
+    .sidebar {
+      background: var(--surface);
+      box-shadow: 4px 0 24px rgba(80, 55, 34, .05)
+    }
+
+    .brand-icon {
+      background: linear-gradient(145deg, #c99171, #a66d52)
+    }
+
+    .nav button {
+      display: flex;
+      width: 100%;
+      gap: 12px;
+      align-items: center;
+      text-align: left;
+      color: var(--sub);
+      background: transparent;
+      border: 0;
+      border-radius: 11px;
+      padding: 13px;
+      font-weight: 650;
+      font-size: 14px;
+      cursor: pointer;
+      transform: none
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      color: var(--text);
+      background: var(--surface2);
+      filter: none;
+      transform: none
+    }
+
+    .nav button.active {
+      box-shadow: inset 3px 0 var(--accent)
+    }
+
+    .nav button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px
+    }
+
+    .app-view[hidden] {
+      display: none !important
+    }
+
+    .view-heading {
+      font-size: 22px;
+      margin: 24px 0 8px;
+      letter-spacing: -.3px
+    }
+
+    .view-heading:focus {
+      outline: none
+    }
+
+    .panel,
+    .summary-card {
+      box-shadow: var(--shadow)
+    }
+
+    button:not(.nav button):not(.modal-close) {
+      background: #986347;
+      color: white
+    }
+
+    button.secondary,
+    button.theme-toggle {
+      background: var(--surface2) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--line)
+    }
+
+    button.danger {
+      background: #b94e4a !important;
+      color: white !important
+    }
+
+    :root[data-theme="dark"] button:not(.nav button):not(.modal-close):not(.secondary):not(.theme-toggle):not(.danger) {
+      background: #a66c50;
+      color: #fff
+    }
+
+    .chart-bar {
+      background: linear-gradient(0deg, #aa7253, #e4b28e)
+    }
+
+    .employee-fill {
+      background: linear-gradient(90deg, #ac795a, #c9a58c)
+    }
+
+    .modal-warning {
+      background: color-mix(in srgb, var(--negative) 10%, var(--surface));
+      border-color: color-mix(in srgb, var(--negative) 32%, var(--line));
+      color: var(--negative)
+    }
+
+    @media(max-width:760px) {
+      .nav button {
+        white-space: nowrap;
+        padding: 10px
+      }
+
+      .view-heading {
+        margin-top: 18px
+      }
+    }
+
+    .live-entry td {
+      background: color-mix(in srgb, var(--positive) 5%, transparent)
+    }
+
+    /* Coral & Ocean 3.3: palette #FFF2DB #FFAB5B #00879E #003092 */
+    :root,
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #fff8ed;
+      --surface: #ffffff;
+      --surface2: #fff2db;
+      --line: #e8d9c2;
+      --text: #15314c;
+      --sub: #5f7281;
+      --accent: #003092;
+      --positive: #00879e;
+      --negative: #c23f4d;
+      --shadow: 0 12px 28px #00309212;
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0D1A63;
+      --surface: #0e317a;
+      --surface2: #1e36ab;
+      --line: #395b72;
+      --text: #fff2db;
+      --sub: #bed3dc;
+      --accent: #ffab5b;
+      --positive: #61d4c7;
+      --negative: #ff9d9d;
+      --shadow: 0 14px 32px #07152640
+    }
+
+    .sidebar {
+      background: #003092;
+      border-right: 1px solid #2756a8;
+      box-shadow: none
+    }
+
+    .brand,
+    .brand span,
+    .sidebar-foot {
+      color: #fff2db !important
+    }
+
+    .brand-icon {
+      background: linear-gradient(145deg, #ffab5b, #00879e) !important;
+      color: #102c4a
+    }
+
+    .nav button {
+      color: #e0eaf9 !important
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: #ffffff23 !important;
+      color: #ffffff !important
+    }
+
+    .nav button.active {
+      box-shadow: inset 4px 0 #ffab5b
+    }
+
+    .section-eyebrow {
+      color: var(--positive)
+    }
+
+    button:not(.nav button):not(.modal-close):not(.secondary):not(.theme-toggle):not(.danger) {
+      background: #003092;
+      color: #fff !important
+    }
+
+    :root[data-theme="dark"] button:not(.nav button):not(.modal-close):not(.secondary):not(.theme-toggle):not(.danger) {
+      background: #ffab5b;
+      color: #182b42 !important
+    }
+
+    button.secondary,
+    button.theme-toggle {
+      background: var(--surface2) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--line)
+    }
+
+    button.danger {
+      background: #bd4455 !important;
+      color: white !important
+    }
+
+    .chart-bar {
+      background: linear-gradient(0deg, #003092, #00879e)
+    }
+
+    .employee-fill {
+      background: linear-gradient(90deg, #00879e, #ffab5b)
+    }
+
+    .actions {
+      gap: 10px !important
+    }
+
+    .actions button {
+      margin: 0
+    }
+
+    .report-export-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+  </style>
+</head>
+
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon">◷</span><span>WorkTime <span
+          style="color:var(--accent)">Pro</span></span></div>
+    <nav class="nav"><button class="active" type="button" data-view="dashboard" id="navDashboard">▦
+        <span>Обзор</span></button><button type="button" data-view="staff" id="navStaff">♙
+        <span>Сотрудники</span></button><button type="button" data-view="timers" id="navTimers">◷
+        <span>Таймеры</span></button><button type="button" data-view="reports" id="navReports">▥
+        <span>Отчёты</span></button></nav>
+    <div class="sidebar-foot">Work Time Tracker 3.3<br>SQLite · Local-first</div>
+  </aside>
+  <main>
+    <header class="top">
+      <h1 id="title"></h1>
+      <div class="toolbar"><button type="button" class="theme-toggle" id="themeToggle"
+          aria-label="Switch theme">☀</button><select id="lang" aria-label="Language">
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+          <option value="uz">Ўзбекча (кирилл)</option>
+        </select></div>
+    </header>
+    <p id="subtitle" class="muted"></p>
+    <h2 id="viewHeading" class="view-heading" tabindex="-1">Обзор</h2>
+    <section id="dashboard" class="app-view" data-view-panel="dashboard">
+      <p class="section-eyebrow" id="overviewEyebrow">АНАЛИТИКА</p>
+      <div class="summary-grid">
+        <div class="summary-card"><span class="summary-icon">♙</span>
+          <div class="summary-label" id="metricEmployeesLabel"></div>
+          <div class="summary-number" id="metricEmployees">0</div>
+        </div>
+        <div class="summary-card"><span class="summary-icon">◷</span>
+          <div class="summary-label" id="metricActiveLabel"></div>
+          <div class="summary-number" id="metricActive">0</div>
+        </div>
+        <div class="summary-card"><span class="summary-icon">◴</span>
+          <div class="summary-label" id="metricHoursLabel"></div>
+          <div class="summary-number" id="metricHours">0:00</div>
+        </div>
+        <div class="summary-card"><span class="summary-icon">▤</span>
+          <div class="summary-label" id="metricEntriesLabel"></div>
+          <div class="summary-number" id="metricEntries">0</div>
+        </div>
+      </div>
+      <div class="analytics-grid">
+        <div class="panel">
+          <h2 id="weeklyChartTitle"></h2>
+          <div class="chart" id="weeklyChart"></div>
+        </div>
+        <div class="panel">
+          <h2 id="employeeChartTitle"></h2>
+          <div class="employee-bars" id="employeeChart"></div>
+        </div>
+      </div>
+    </section>
+    <section id="staff" class="panel app-view" data-view-panel="staff" hidden>
+      <h2 id="addTitle"></h2>
+      <form id="add">
+        <div class="fields" id="employeeFields"></div>
+        <div class="row actions"><button id="addBtn"></button></div>
+      </form>
+    </section>
+    <section id="timers" class="panel app-view" data-view-panel="timers" hidden>
+      <h2 id="timerTitle"></h2>
+      <div id="people"></div>
+    </section>
+    <section id="reports" class="panel app-view" data-view-panel="reports" hidden>
+      <h2 id="reportTitle"></h2>
+      <form id="filter" class="row"><label class="datebox"><span id="fromLabel"></span><input type="date" id="from"
+            required></label><label class="datebox"><span id="toLabel"></span><input type="date" id="to"
+            required></label><select id="employee"></select><button id="reportBtn"></button><button type="button"
+          id="export" class="secondary"></button><button type="button" id="exportXlsx" class="secondary"></button>
+      </form>
+      <div id="report"></div>
+    </section>
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+  </main>
+  <div id="confirmOverlay" class="modal-overlay" hidden>
+    <div class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle"
+      aria-describedby="confirmDescription confirmWarning"><button type="button" id="confirmClose" class="modal-close"
+        aria-label="Close">×</button>
+      <div class="modal-symbol" aria-hidden="true">🗑</div>
+      <h2 id="confirmTitle"></h2>
+      <p id="confirmDescription"></p>
+      <div id="confirmWarning" class="modal-warning"></div>
+      <div class="modal-buttons"><button type="button" class="secondary" id="confirmCancel"></button><button
+          type="button" class="danger" id="confirmDelete"></button></div>
+    </div>
+  </div>
+  <script>
+    const L = {ru: {title: 'Учёт рабочего времени', subtitle: 'Автоматический перевод · данные хранятся в SQLite', add: 'Добавить сотрудника', timers: 'Таймеры сотрудников', report: 'Отчёт за период', name: 'Имя сотрудника', task: 'Описание задачи', addBtn: 'Добавить', start: 'Запустить', stop: 'Остановить', edit: 'Редактировать переводы', del: 'Удалить', save: 'Сохранить', cancel: 'Отмена', show: 'Показать отчёт', export: 'Экспорт CSV', exportXlsx: 'Экспорт Excel', from: 'С', to: 'По', all: 'Все сотрудники', empty: 'Записей нет', none: 'Пока нет сотрудников', running: 'Работает', stopped: 'Таймер остановлен', started: 'Начало', ended: 'Окончание', duration: 'Продолжительность', action: 'Действия', confirm: 'Удалить сотрудника вместе с записями?', confirmEntry: 'Удалить запись?', confirmTitle: 'Подтвердите удаление', confirmWarning: 'Внимание! Это действие нельзя отменить.', confirmPerson: 'Удалить сотрудника «{name}» вместе со всеми записями рабочего времени?', confirmRecord: 'Удалить запись «{name}»?', close: 'Закрыть', success: 'Сохранено', error: 'Ошибка', working: 'Переводим и сохраняем…', editHelp: 'Можно исправить оба языковых варианта вручную.', h: 'ч', m: 'мин', sec: 'сек'}, en: {title: 'Work Time Tracker', subtitle: 'Automatic translation · data stored in SQLite', add: 'Add employee', timers: 'Employee timers', report: 'Period report', name: 'Employee name', task: 'Task description', addBtn: 'Add', start: 'Start', stop: 'Stop', edit: 'Edit translations', del: 'Delete', save: 'Save', cancel: 'Cancel', show: 'Show report', export: 'Export CSV', exportXlsx: 'Export Excel', from: 'From', to: 'To', all: 'All employees', empty: 'No entries', none: 'No employees yet', running: 'Working', stopped: 'Timer stopped', started: 'Started', ended: 'Ended', duration: 'Duration', action: 'Actions', confirm: 'Delete employee and all entries?', confirmEntry: 'Delete entry?', confirmTitle: 'Confirm deletion', confirmWarning: 'Warning! This action cannot be undone.', confirmPerson: 'Delete employee “{name}” and all their time entries?', confirmRecord: 'Delete time entry “{name}”?', close: 'Close', success: 'Saved', error: 'Error', working: 'Translating and saving…', editHelp: 'You can manually correct both language versions.', h: 'h', m: 'min', sec: 'sec'}};
+    const D = {ru: {overview: 'Обзор', staff: 'Сотрудники', timers: 'Таймеры', reports: 'Отчёты', analytics: 'АНАЛИТИКА', employees: 'Сотрудников', active: 'Активных таймеров', hours: 'Часов за период', entries: 'Задач за период', weekly: 'Рабочее время по дням', byEmployee: 'Время по сотрудникам', noData: 'Нет данных за выбранный период', theme: 'Сменить тему'}, en: {overview: 'Overview', staff: 'Employees', timers: 'Timers', reports: 'Reports', analytics: 'ANALYTICS', employees: 'Employees', active: 'Active timers', hours: 'Hours in period', entries: 'Tasks in period', weekly: 'Daily tracked time', byEmployee: 'Time by employee', noData: 'No data for selected period', theme: 'Toggle theme'}};
+    let theme = localStorage.getItem('worktime_theme') === 'dark' ? 'dark' : 'light'; document.documentElement.dataset.theme = theme; function themeLabel() {document.querySelector('#themeToggle').textContent = theme === 'dark' ? '☀ Light' : '☾ Dark'; document.querySelector('#themeToggle').title = D[lang].theme} document.querySelector('#themeToggle').onclick = () => {theme = theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = theme; localStorage.setItem('worktime_theme', theme); themeLabel()};// SPA view switching: no anchors, no new browser tabs, no network navigation.
+    const validViews = ['dashboard', 'staff', 'timers', 'reports'];
+    let currentView = 'dashboard';
+    function showView(view, focus = false) {
+      if (!validViews.includes(view)) view = 'dashboard';
+      currentView = view;
+      document.querySelectorAll('[data-view-panel]').forEach(panel => {panel.hidden = panel.dataset.viewPanel !== view});
+      document.querySelectorAll('.nav [data-view]').forEach(button => {
+        const selected = button.dataset.view === view;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-current', selected ? 'page' : 'false');
+      });
+      const names = {dashboard: 'overview', staff: 'staff', timers: 'timers', reports: 'reports'};
+      const heading = document.querySelector('#viewHeading');
+      heading.textContent = D[lang][names[view]];
+      if (focus) {heading.focus({preventScroll: true}); window.scrollTo({top: 0, behavior: 'instant'})}
+    }
+    document.querySelectorAll('.nav [data-view]').forEach(button => button.addEventListener('click', () => showView(button.dataset.view, true)));
+
+    function dashboard() {let d = D[lang], count = people.length, active = people.filter(p => p.active_id).length, employees = data?.employees || [], seconds = employees.reduce((sum, p) => sum + (p.total_seconds || 0), 0), entries = employees.reduce((sum, p) => sum + p.entries.length, 0); let labels = {navDashboard: 'overview', navStaff: 'staff', navTimers: 'timers', navReports: 'reports', overviewEyebrow: 'analytics', metricEmployeesLabel: 'employees', metricActiveLabel: 'active', metricHoursLabel: 'hours', metricEntriesLabel: 'entries', weeklyChartTitle: 'weekly', employeeChartTitle: 'byEmployee'}; for (let [id, key] of Object.entries(labels)) {let n = document.getElementById(id); if (id.startsWith('nav')) n.querySelector('span').textContent = d[key]; else n.textContent = d[key]} document.querySelector('#metricEmployees').textContent = count; document.querySelector('#metricActive').textContent = active; document.querySelector('#metricHours').textContent = (seconds / 3600).toFixed(1); document.querySelector('#metricEntries').textContent = entries; themeLabel(); showView(currentView); let from = document.querySelector('#from').value, to = document.querySelector('#to').value, dates = []; if (from && to) {let start = new Date(from + 'T12:00:00'), end = new Date(to + 'T12:00:00'); if (end >= start) {let span = Math.round((end - start) / 86400000) + 1, step = Math.max(1, Math.ceil(span / 14)); for (let i = 0; i < span; i += step) {let dt = new Date(start); dt.setDate(start.getDate() + i); dates.push({date: dt.toISOString().slice(0, 10), label: dt.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-GB', {day: '2-digit', month: '2-digit'}), value: 0})} } } for (let p of employees) for (let e of p.entries) {let a = new Date(e.started_at), b = e.ended_at ? new Date(e.ended_at) : new Date(); if (!isFinite(a) || !isFinite(b)) continue; for (let i = 0; i < dates.length; i++) {let start = new Date(dates[i].date + 'T00:00:00'), end = i + 1 < dates.length ? new Date(dates[i + 1].date + 'T00:00:00') : new Date(to + 'T00:00:00').getTime() + 86400000; let overlap = Math.max(0, Math.min(b, end) - Math.max(a, start)) / 1000; dates[i].value += overlap} } let chart = document.querySelector('#weeklyChart'); chart.replaceChildren(); let max = Math.max(1, ...dates.map(x => x.value)); if (!dates.length || !seconds) {let n = document.createElement('div'); n.className = 'chart-empty'; n.textContent = d.noData; chart.append(n)} else for (let day of dates) {let col = document.createElement('div'); col.className = 'chart-col'; let val = document.createElement('span'); val.className = 'chart-val'; val.textContent = (day.value / 3600).toFixed(1) + 'h'; let bar = document.createElement('div'); bar.className = 'chart-bar'; bar.style.height = Math.max(3, day.value / max * 145) + 'px'; bar.title = day.label + ' · ' + (day.value / 3600).toFixed(2) + 'h'; let label = document.createElement('span'); label.className = 'chart-day'; label.textContent = day.label; col.append(val, bar, label); chart.append(col)} let eb = document.querySelector('#employeeChart'); eb.replaceChildren(); let ranked = employees.filter(p => p.total_seconds > 0).sort((a, b) => b.total_seconds - a.total_seconds); if (!ranked.length) {let n = document.createElement('p'); n.className = 'muted'; n.textContent = d.noData; eb.append(n)} for (let p of ranked) {let block = document.createElement('div'), header = document.createElement('div'), name = document.createElement('span'), hours = document.createElement('span'), track = document.createElement('div'), fill = document.createElement('div'); header.className = 'employee-bar-title'; name.textContent = v(p, 'name'); hours.textContent = (p.total_seconds / 3600).toFixed(1) + 'h'; header.append(name, hours); track.className = 'employee-track'; fill.className = 'employee-fill'; fill.style.width = (p.total_seconds / Math.max(1, ranked[0].total_seconds) * 100) + '%'; track.append(fill); block.append(header, track); eb.append(block)} }
+    const $ = x => document.querySelector(x), el = (tag, txt) => {let n = document.createElement(tag); if (txt !== undefined) n.textContent = txt; return n}; let lang = localStorage.getItem('worktime_lang'); if (!L[lang]) lang = 'ru'; $('#lang').innerHTML = '<option value="ru">Русский</option><option value="en">English</option>'; $('#lang').value = lang; let people = [], data = null; const t = k => L[lang][k], v = (o, k) => lang === 'en' ? (o[k + '_en'] || o[k]) : o[k], fmt = s => `${Math.floor(s / 3600)} ${t('h')} ${Math.floor(s % 3600 / 60)} ${t('m')} ${Math.floor(s % 60)} ${t('sec')}`, stamp = s => s ? new Date(s).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-GB') : '—';
+    function msg(text, bad = false) {$('#message').textContent = text; $('#message').className = bad ? 'message error' : 'message'}
+    async function api(url, method = 'GET', body) {let r = await fetch(url, {method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined}); let j = await r.json(); if (!r.ok) throw Error(j.error || t('error')); return j}
+    let modalResolve = null, modalReturnFocus = null;
+    function closeConfirm(result = false) {if (!modalResolve) return; let resolve = modalResolve; modalResolve = null; $('#confirmOverlay').hidden = true; document.body.style.overflow = ''; if (modalReturnFocus?.isConnected) modalReturnFocus.focus(); resolve(result)}
+    function askDelete(kind, name) {if (modalResolve) closeConfirm(false); modalReturnFocus = document.activeElement; $('#confirmTitle').textContent = t('confirmTitle'); $('#confirmDescription').textContent = t(kind === 'person' ? 'confirmPerson' : 'confirmRecord').replace('{name}', name); $('#confirmWarning').textContent = t('confirmWarning'); $('#confirmCancel').textContent = t('cancel'); $('#confirmDelete').textContent = t('del'); $('#confirmClose').setAttribute('aria-label', t('close')); $('#confirmOverlay').hidden = false; document.body.style.overflow = 'hidden'; $('#confirmCancel').focus(); return new Promise(resolve => {modalResolve = resolve})}
+    $('#confirmCancel').onclick = () => closeConfirm(false); $('#confirmClose').onclick = () => closeConfirm(false); $('#confirmDelete').onclick = () => closeConfirm(true); $('#confirmOverlay').addEventListener('click', e => {if (e.target === $('#confirmOverlay')) closeConfirm(false)}); document.addEventListener('keydown', e => {if (!modalResolve) return; if (e.key === 'Escape') {e.preventDefault(); closeConfirm(false)} else if (e.key === 'Tab') {const focusables = [$('#confirmClose'), $('#confirmCancel'), $('#confirmDelete')]; const index = focusables.indexOf(document.activeElement); if (e.shiftKey && index <= 0) {e.preventDefault(); focusables.at(-1).focus()} else if (!e.shiftKey && index === focusables.length - 1) {e.preventDefault(); focusables[0].focus()} } });
+    function btn(label, fn, cls = 'secondary') {let b = el('button', label); b.type = 'button'; b.className = cls; b.onclick = fn; return b}
+    function input(placeholder = '', value = '') {let i = el('input'); i.placeholder = placeholder; i.value = value; i.required = true; return i}
+    function edit(parent, kind, record) {let box = el('div'); box.className = 'panel'; let ru = input('Русский', record[kind] || ''), en = input('English', record[kind + '_en'] || ''); box.append(el('p', t('editHelp')), ru, en); let actions = el('div'); actions.className = 'row actions'; actions.append(btn(t('save'), async () => {try {let endpoint = kind === 'name' ? 'update_employee' : 'update_entry'; await api('/api/' + endpoint, 'POST', {[kind === 'name' ? 'employee_id' : 'entry_id']: record.id, [kind]: ru.value, [kind + '_en']: en.value}); msg(t('success')); await refresh()} catch (e) {msg(e.message, true)} }, ''), btn(t('cancel'), () => refresh())); box.append(actions); parent.replaceChildren(box)}
+    function render() {document.documentElement.lang = lang; document.title = t('title'); for (let [id, key] of Object.entries({title: 'title', subtitle: 'subtitle', addTitle: 'add', timerTitle: 'timers', reportTitle: 'report', fromLabel: 'from', toLabel: 'to', addBtn: 'addBtn', reportBtn: 'show', export: 'export', exportXlsx: 'exportXlsx'})) $('#' + id).textContent = t(key); $('#employeeFields').replaceChildren(); let name = input(t('name')); name.id = 'nameInput'; name.maxLength = 100; $('#employeeFields').append(name); let root = $('#people'); root.replaceChildren(); let sel = $('#employee'), chosen = sel.value; sel.replaceChildren(new Option(t('all'), '')); if (!people.length) root.append(el('p', t('none'))); for (let p of people) {sel.add(new Option(v(p, 'name'), p.id)); let wrap = el('div'); wrap.className = 'person'; wrap.append(el('h3', v(p, 'name'))); if (p.active_id) {wrap.append(el('p', `${t('running')}: ${v({task: p.active_task, task_en: p.active_task_en}, 'task')} · ${stamp(p.active_since)}`)); let clock = el('div'); clock.className = 'clock'; clock.dataset.started = p.active_since; wrap.append(clock, btn(t('stop'), async () => {try {await api('/api/stop', 'POST', {employee_id: p.id}); await refresh()} catch (e) {msg(e.message, true)} }, 'danger'))} else {wrap.append(el('p', t('stopped'))); let form = el('form'), task = input(t('task')); task.maxLength = 300; form.append(task); let submit = el('button', t('start')); submit.style.marginTop = '10px'; form.append(submit); form.onsubmit = async e => {e.preventDefault(); submit.disabled = true; msg(t('working')); try {await api('/api/start', 'POST', {employee_id: p.id, text: task.value, lang}); msg(t('success')); await refresh()} catch (err) {msg(err.message, true); submit.disabled = false} }; wrap.append(form)} let actions = el('div'); actions.className = 'row actions'; actions.append(btn(t('edit'), () => edit(wrap, 'name', p)), btn(t('del'), async () => {if (!await askDelete('person', v(p, 'name'))) return; try {await api('/api/delete_employee', 'POST', {employee_id: p.id}); await refresh()} catch (e) {msg(e.message, true)} })); wrap.append(actions); root.append(wrap)} sel.value = chosen; renderReport(); dashboard(); clocks()}
+    function renderReport() {let root = $('#report'); root.replaceChildren(); if (!data) return; for (let p of data.employees) {let block = el('div'); block.className = 'report-person'; let totalHeading = el('h3', `${v(p, 'name')} — ${fmt(p.total_seconds)}`); totalHeading.dataset.reportTotal = p.id; block.append(totalHeading); if (!p.entries.length) {block.append(el('p', t('empty'))); root.append(block); continue} let sc = el('div'); sc.className = 'scroll'; let table = el('table'), head = el('tr'); for (let key of ['task', 'started', 'ended', 'duration', 'action']) head.append(el('th', t(key))); table.append(head); for (let e of p.entries) {let tr = el('tr'); for (let value of [v(e, 'task'), stamp(e.started_at), e.ended_at ? stamp(e.ended_at) : t('running'), fmt(e.seconds)]) tr.append(el('td', value)); if (!e.ended_at) {tr.classList.add('live-entry'); tr.dataset.entryId = e.id; tr.children[3].dataset.liveDuration = e.id;} let cell = el('td'); cell.append(btn(t('edit'), () => edit(root, 'task', e)), btn(t('del'), async () => {if (!await askDelete('entry', v(e, 'task'))) return; try {await api('/api/delete_entry', 'POST', {entry_id: e.id}); await refresh()} catch (err) {msg(err.message, true)} })); tr.append(cell); table.append(tr)} sc.append(table); block.append(sc); root.append(block)} dashboard()}
+    function clocks() {for (let x of document.querySelectorAll('[data-started]')) x.textContent = fmt(Math.max(0, Math.floor((Date.now() - new Date(x.dataset.started).getTime()) / 1000)))}
+    // Use the same local-date report boundaries as the Python backend (UTC+05:00).
+    function reportSeconds(entry, now) {const from = $('#from').value, to = $('#to').value; if (!from || !to) return 0; const lower = Date.parse(from + 'T00:00:00+05:00'), upper = Date.parse(to + 'T00:00:00+05:00') + 86400000; const start = Date.parse(entry.started_at), end = entry.ended_at ? Date.parse(entry.ended_at) : now; return Math.max(0, Math.floor((Math.min(end, upper) - Math.max(start, lower)) / 1000))}
+    function liveTick() {clocks(); if (!data) return; const now = Date.now(); let hasActive = false; for (const p of data.employees) {let total = 0; for (const e of p.entries) {if (!e.ended_at) {hasActive = true; e.seconds = reportSeconds(e, now); const cell = document.querySelector(`[data-live-duration="${e.id}"]`); if (cell) cell.textContent = fmt(e.seconds)} total += e.seconds || 0} p.total_seconds = total; const heading = document.querySelector(`[data-report-total="${p.id}"]`); if (heading) heading.textContent = `${v(p, 'name')} — ${fmt(total)}`;} if (hasActive) dashboard()}
+    let lastLiveSync = 0;
+    async function syncActive() {if (!people.some(p => p.active_id) || document.hidden) return; const now = Date.now(); if (now - lastLiveSync < 15000) return; lastLiveSync = now; try {await loadReport()} catch (e) {/* Preserve the running timer if the network is temporarily unavailable. */} }
+
+    async function loadReport() {let q = new URLSearchParams({start: $('#from').value, end: $('#to').value}); if ($('#employee').value) q.set('employee_id', $('#employee').value); data = await api('/api/report?' + q); renderReport()}
+    async function refresh() {people = await api('/api/employees'); render(); await loadReport()}
+    function day(d) {return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-')} $('#from').value = day(new Date(Date.now() - 6 * 86400000)); $('#to').value = day(new Date());
+    $('#add').onsubmit = async e => {e.preventDefault(); let b = $('#addBtn'); b.disabled = true; msg(t('working')); try {await api('/api/employees', 'POST', {text: $('#nameInput').value, lang}); msg(t('success')); await refresh()} catch (err) {msg(err.message, true)} finally {b.disabled = false} };
+    $('#filter').onsubmit = async e => {e.preventDefault(); try {await loadReport()} catch (err) {msg(err.message, true)} };
+    $('#exportXlsx').onclick = () => {let q = new URLSearchParams({start: $('#from').value, end: $('#to').value, lang}); if ($('#employee').value) q.set('employee_id', $('#employee').value); location.href = '/api/export/xlsx?' + q};
+    $('#export').onclick = () => {let q = new URLSearchParams({start: $('#from').value, end: $('#to').value, lang}); if ($('#employee').value) q.set('employee_id', $('#employee').value); location.href = '/api/export?' + q};
+    $('#lang').onchange = e => {lang = e.target.value; localStorage.setItem('worktime_lang', lang); render(); showView(currentView)}; render(); refresh().catch(e => msg(e.message, true)); setInterval(() => {liveTick(); syncActive()}, 1000);
+  </script>
+</body>
+
+</html>
